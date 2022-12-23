@@ -1,5 +1,6 @@
 import rc5
 import keysched
+import utils
 
 #* This folder contains code for encryption of cipher text using RC5 algorithm
 
@@ -13,11 +14,12 @@ if __name__ == "__main__":
     #     print('Please enter a valid number of rounds')
     #     exit()
 
-    key_list = keysched.main_key_scheduler(key, 12)
-
-    # binary = rc5.text_to_binary(text)
-    # binary_list = rc5.divide_into_64_bits(binary)
-    # word_list = rc5.divide_into_32_bits(binary_list[0])
-    # print(word_list)
-    #key_list = keysched.main_key_scheduler(key, 8)
-
+    key_list = keysched.rc5_key_schedule(key, 12)
+    cipher_text = rc5.encrypt(text, key_list, 12)
+    decoded_text = rc5.decrypt(cipher_text, key_list, 12)
+    print('The cipher text is: ', cipher_text)
+    print('The decoded text is: ', decoded_text)
+    #print(C.decode())
+    # bin_text = utils.text_to_binary(text)
+    # A,B = rc5.encrypt(bin_text, key_list, 12)
+    

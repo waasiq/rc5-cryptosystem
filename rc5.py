@@ -1,55 +1,47 @@
 
 
 #* This py file contains code for coverting text to binary and vice versa
+def encrypt(plaintext, S , rounds):
+    # Convert the plaintext and key strings to bytes objects
+    plaintext_bytes = plaintext.encode()
 
-def encrypt(bin_text, key_list, rounds):
-    A = int(bin_text[0:32], 2)
-    B = int(bin_text[32:64], 2)
+    # Initialize the encryption variables
+    A = B = 0
+    ciphertext = b''
 
-    A = A + key_list[0]
-    B = B + key_list[1]
+    # Encrypt each block of the plaintext
+    for i in range(0, len(plaintext_bytes), 8):
+        A = int.from_bytes(plaintext_bytes[i:i+4], 'little')
+        B = int.from_bytes(plaintext_bytes[i+4:i+8], 'little')
 
-    for i in range(1, rounds+1):
-        A = ((A ^ B) << (B % 32)) + key_list[2*i]
-        B = ((B ^ A) << (A % 32)) + key_list[2*i + 1]
-    
-    
-    return A, B
+        # Perform the encryption rounds
+        for j in range(1, rounds+1):
+            A = ((A + S[2*j-1]) & 0xFFFFFFFF) ^ B
+            B = ((B + S[2*j]) & 0xFFFFFFFF) ^ A
+
+        # Concatenate the encrypted blocks
+        ciphertext += (A.to_bytes(4, 'little') + B.to_bytes(4, 'little'))
+
+    return ciphertext
+
+def decrypt(ciphertext, S , rounds):
+    # Initialize the decryption variables
+    A = B = 0
+    plaintext = b''
+
+    # Decrypt each block of the ciphertext
+    for i in range(0, len(ciphertext), 8):
+        A = int.from_bytes(ciphertext[i:i+4], 'little')
+        B = int.from_bytes(ciphertext[i+4:i+8], 'little')
+
+        # Perform the decryption rounds
+        for j in range(rounds, 0, -1):
+            B = (B ^ A) - S[2*j] & 0xFFFFFFFF
+            A = (A ^ B) - S[2*j-1] & 0xFFFFFFFF
+
+        # Concatenate the decrypted blocks
+        plaintext += (A.to_bytes(4, 'little') + B.to_bytes(4, 'little'))
+
+    return plaintext.decode()
 
 
-
-def text_to_hex(text):
-    hex = ''.join(format(ord(i), '02x') for i in text)
-    return hex
-
-def text_to_binary(text):
-    binary = ''.join(format(ord(i), '08b') for i in text)
-    return binary
-
-def divide_into_64_bits(binary):
-    binary_list = []
-    for i in range(0, len(binary), 64):
-        binary_list.append(binary[i:i+64])
-    return binary_list
-    
-def divide_into_words(binary):
-    binary_list = []
-    for i in range(0, len(binary), 16):
-        binary_list.append(binary[i:i+16])
-    return binary_list
-
-def divide_into_1_byte(binary):
-    binary_list = []
-    for i in range(0, len(binary), 8):
-        binary_list.append(binary[i:i+8])
-    return binary_list
-
-def binary_to_text(binary):
-    text = ''.join(chr(int(binary[i:i+8], 2)) for i in range(0, len(binary), 8))
-    return text
-
-def divide_into_32_bits(binary):
-    binary_list = []
-    for i in range(0, len(binary), 32):
-        binary_list.append(binary[i:i+32])
-    return binary_list

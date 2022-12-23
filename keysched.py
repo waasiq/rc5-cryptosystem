@@ -1,38 +1,29 @@
-import rc5 
+p = 0xB7E15163  # For 32 bit words
+q = 0x9E3779b9  # For 32 bit words
 
-#* Code for the key scheduler for RC5 algorithm
+def rc5_key_schedule(key, rounds):
+    # Convert the key string to a bytes object
+    key_bytes = key.encode()
 
-p = 0xb7e15163  # For 32 bit words
-q = 0x9e3779b9  # For 32 bit words
+    # Sub keyschedule intialization according to the paper
+    S = [0] * 2*(rounds+1)
+    S[0] = p
+    for i in range(1, len(S)):
+        S[i] = S[i-1] + q
 
-def sub_key_scheduler(rounds):
-    key_list = []
-    key_list.append(p)
-    for i in range(1, 2*rounds + 2):
-        key_list.append((key_list[i-1] + q) % 2**32)
-    return key_list
+    # Mix the key into the key schedule
+    l = len(key_bytes) // 4
+    L = [0] * (l+1)
+    for i in range(l):
+        L[i] = int.from_bytes(key_bytes[4*i:4*(i+1)], 'little')
+    L[l] = int.from_bytes(key_bytes[4*l:], 'little')
 
-def main_key_scheduler(key, rounds):
-    bin_key = rc5.text_to_binary(key)
-    
-    key_len = len(bin_key)
-    if (key_len > 2040):
-        print('Key length cant be more than 255 bytes')
-        exit()
+    A = B = i = j = 0
+    v = 3 * max(l, 2*(rounds+1))
+    for k in range(v):
+        A = S[i] = ((S[i] + A + B) & 0xFFFFFFFF)
+        B = L[j] = ((L[j] + A + B) & 0xFFFFFFFF)
+        i = (i+1) % (2*(rounds+1))
+        j = (j+1) % (l+1)
 
-    byte_key = rc5.divide_into_1_byte(bin_key)
-    word_key = rc5.divide_into_words(bin_key)
-
-
-    key_list = sub_key_scheduler(rounds)
-    A = B = 0
-    i = j = 0
-    v = 3 * max(len(word_key), 2*rounds + 2)
-
-    for s in range(v):
-        A = key_list[i] = (key_list[i] + A + B) % 2**32
-        B = word_key[j] = (word_key[j] + A + B) % 2**32
-        i = (i + 1) % (2*rounds + 2)
-        j = (j + 1) % len(word_key)
-    
-    return key_list
+    return S
