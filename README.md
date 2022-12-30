@@ -20,3 +20,9 @@ Run the EXE file directly or run the following command in the src folder:
     python app.py
 ```
 
+If you want to create exe use pyinstaller:
+```
+    pip install pyinstaller
+    pyinstaller app.py
+```
+
