@@ -30,7 +30,7 @@ def encrypt(plaintext, S , rounds):
 
     return bytes_to_base64(ciphertext)
 
-def decrypt(ciphertext, S , rounds):
+def decrypt(ciphertext, S, rounds):
     ciphertext = base64_to_bytes(ciphertext)
 
     # Initialize the decryption variables
@@ -50,9 +50,7 @@ def decrypt(ciphertext, S , rounds):
         # Concatenate the decrypted blocks
         plaintext += (A.to_bytes(4, 'little') + B.to_bytes(4, 'little'))
 
-        # Remove all the number of padding bytes after the plaintext
-        plaintext = plaintext[:plaintext.find(b'\x00')]
-
-    return plaintext.decode()
+    plaintext = plaintext.rstrip(b'\x00')
+    return plaintext.decode('utf-8')
 
 
